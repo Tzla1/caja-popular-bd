@@ -1,0 +1,104 @@
+BEGIN;
+
+DROP TRIGGER IF EXISTS trg_prestamo_vs_saldo ON prestamos;
+CREATE TRIGGER trg_prestamo_vs_saldo
+    BEFORE INSERT OR UPDATE OF monto_original ON prestamos
+    FOR EACH ROW EXECUTE FUNCTION check_prestamo_vs_saldo();
+
+CREATE OR REPLACE FUNCTION aplicar_transaccion() RETURNS TRIGGER AS $$
+DECLARE
+    v_socio_cuenta   INTEGER;
+    v_socio_prestamo INTEGER;
+    v_saldo          NUMERIC(12,2);
+BEGIN
+    PERFORM set_config('caja.ledger', 'on', true);
+
+    IF NEW.prestamo_id IS NOT NULL THEN
+        SELECT socio_id INTO v_socio_cuenta   FROM cuentas_ahorro WHERE id = NEW.cuenta_id;
+        SELECT socio_id INTO v_socio_prestamo FROM prestamos      WHERE id = NEW.prestamo_id;
+        IF v_socio_cuenta IS DISTINCT FROM v_socio_prestamo THEN
+            RAISE EXCEPTION 'La cuenta (socio %) y el prestamo (socio %) no coinciden',
+                            v_socio_cuenta, v_socio_prestamo;
+        END IF;
+    END IF;
+
+    IF NEW.tipo IN ('abono_prestamo','penalizacion','desembolso_prestamo')
+       AND NEW.prestamo_id IS NULL THEN
+        RAISE EXCEPTION 'La transaccion % requiere prestamo_id', NEW.tipo;
+    END IF;
+
+    IF NEW.tipo IN ('deposito','interes_ahorro')
+       AND (NEW.monto < 100.00 OR NEW.monto > 10000.00) THEN
+        RAISE EXCEPTION 'Monto de % fuera de rango 100-10000: %', NEW.tipo, NEW.monto;
+    END IF;
+
+    IF NEW.tipo IN ('deposito','interes_ahorro','apertura','desembolso_prestamo') THEN
+        UPDATE cuentas_ahorro SET saldo = saldo + NEW.monto WHERE id = NEW.cuenta_id;
+    ELSIF NEW.tipo = 'retiro' THEN
+        SELECT saldo INTO v_saldo FROM cuentas_ahorro WHERE id = NEW.cuenta_id FOR UPDATE;
+        IF NEW.monto > v_saldo THEN
+            RAISE EXCEPTION 'Fondos insuficientes: saldo % < retiro %', v_saldo, NEW.monto;
+        END IF;
+        UPDATE cuentas_ahorro SET saldo = saldo - NEW.monto WHERE id = NEW.cuenta_id;
+    ELSIF NEW.tipo = 'abono_prestamo' THEN
+        UPDATE prestamos SET saldo_pendiente = saldo_pendiente - NEW.monto WHERE id = NEW.prestamo_id;
+    ELSIF NEW.tipo = 'penalizacion' THEN
+        UPDATE prestamos SET saldo_pendiente = saldo_pendiente + NEW.monto WHERE id = NEW.prestamo_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_aplicar_transaccion ON transacciones;
+CREATE TRIGGER trg_aplicar_transaccion
+    BEFORE INSERT ON transacciones
+    FOR EACH ROW EXECUTE FUNCTION aplicar_transaccion();
+
+CREATE OR REPLACE FUNCTION proteger_saldo_directo() RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.saldo <> OLD.saldo
+       AND current_setting('caja.ledger', true) IS DISTINCT FROM 'on' THEN
+        RAISE EXCEPTION 'El saldo solo puede modificarse via transacciones';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_proteger_saldo ON cuentas_ahorro;
+CREATE TRIGGER trg_proteger_saldo
+    BEFORE UPDATE OF saldo ON cuentas_ahorro
+    FOR EACH ROW EXECUTE FUNCTION proteger_saldo_directo();
+
+ALTER TABLE socios DROP CONSTRAINT IF EXISTS chk_socio_curp_formato;
+ALTER TABLE socios ADD  CONSTRAINT chk_socio_curp_formato
+    CHECK (curp ~ '^[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z][0-9]$') NOT VALID;
+
+ALTER TABLE socios DROP CONSTRAINT IF EXISTS chk_socio_rfc_formato;
+ALTER TABLE socios ADD  CONSTRAINT chk_socio_rfc_formato
+    CHECK (rfc ~ '^[A-ZÑ&]{3,4}[0-9]{6}[0-9A-Z]{3}$') NOT VALID;
+
+ALTER TABLE socios DROP CONSTRAINT IF EXISTS chk_socio_email_formato;
+ALTER TABLE socios ADD  CONSTRAINT chk_socio_email_formato
+    CHECK (email IS NULL OR email ~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$') NOT VALID;
+
+DO $do$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='caja') THEN
+        EXECUTE 'ALTER ROLE caja NOSUPERUSER NOBYPASSRLS NOCREATEDB';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='consulta') THEN
+        EXECUTE 'ALTER ROLE consulta NOLOGIN';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='usuario1') THEN
+        EXECUTE 'ALTER ROLE usuario1 PASSWORD ''U1_x9Kd2pLm7Qw!''';
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname='usuario2') THEN
+        EXECUTE 'ALTER ROLE usuario2 PASSWORD ''U2_v4Rt8zBn3Ce!''';
+    END IF;
+END $do$;
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+
+COMMIT;

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Proyecto Final - Caja Popular - Jesdreel Daniel Mata Gomez</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme">
+<style>
+  .reveal { font-family: 'Segoe UI', 'Helvetica', sans-serif; }
+  .reveal h1, .reveal h2, .reveal h3 { color: #1E4B8B; text-transform: none; letter-spacing: 0; }
+  .reveal h1 { font-size: 1.8em; margin-bottom: 0.15em; }
+  .reveal h2 { font-size: 1.4em; margin-bottom: 0.3em; }
+  .reveal .subtitulo { color: #666; font-size: 0.7em; font-weight: 300; margin-top: -0.2em; margin-bottom: 0.3em; }
+  .reveal .footer { position: absolute; bottom: 12px; right: 20px; color: #999; font-size: 12px; }
+  .reveal ul { display: inline-block; text-align: left; margin: 0.3em 0; }
+  .reveal li { margin: 0.25em 0; line-height: 1.35; }
+  .reveal p { margin: 0.35em 0; line-height: 1.4; }
+  .reveal .destacado { color: #C62828; font-weight: bold; }
+  .reveal .ok { color: #2E7D32; font-weight: bold; }
+  .reveal .caja-info {
+    background: #F5F5F5; border-left: 5px solid #1E4B8B;
+    padding: 10px 18px; margin: 8px auto; text-align: left; font-size: 0.62em;
+    max-width: 90%;
+  }
+  .reveal .caja-info ul { margin: 0.4em 0; }
+  .reveal .caja-info li { margin: 0.3em 0; }
+  .reveal .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .reveal .grid-2 > div {
+    background: #FAFAFA; border: 1px solid #DDD; border-radius: 6px;
+    padding: 12px; text-align: left; font-size: 0.62em;
+  }
+  .reveal pre code {
+    font-size: 0.5em; line-height: 1.35; padding: 10px; background: #263238; color: #EEE;
+    border-radius: 4px; text-align: left;
+  }
+  .reveal .kpi {
+    display: inline-block; background: #1E4B8B; color: white;
+    padding: 6px 14px; margin: 4px; border-radius: 20px; font-size: 0.65em;
+  }
+  .reveal .kpi.warn { background: #EF6C00; }
+  .reveal .kpi.ok { background: #2E7D32; }
+  .reveal .titulo-final { font-size: 2.2em; color: #1E4B8B; margin-top: 25px; }
+
+  /* Red de seguridad: si un slide se pasa, aparece scroll interno
+     en lugar de "cortar" el contenido. Reveal.js 5.x lo soporta
+     via CSS puro cuando la seccion tiene overflow. */
+  .reveal .slides > section {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+  /* Scrollbar discreto */
+  .reveal .slides > section::-webkit-scrollbar { width: 8px; }
+  .reveal .slides > section::-webkit-scrollbar-thumb {
+    background: rgba(30,75,139,0.35); border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- Slide 1: Qué es la Caja Popular -->
+    <section>
+      <h1>Caja Popular</h1>
+      <div class="subtitulo">Sistema de gestión de ahorro y préstamos</div>
+      <div class="caja-info">
+        <p>La <b>Caja Popular</b> es una institución financiera comunitaria que administra
+        el ahorro y otorga préstamos a sus socios afiliados.</p>
+        <p>El sistema implementa:</p>
+        <ul>
+          <li>Alta de socios con validación de edad (<span class="destacado">≥ 19 años</span>) y aporte inicial (<span class="destacado">≥ $3,000</span>).</li>
+          <li>Cuentas de ahorro únicas por socio con interés fijo del <span class="ok">20% mensual</span>.</li>
+          <li>Préstamos con tasa del <span class="ok">5% mensual</span>, tope <span class="destacado">$50,000</span> y hasta 2 veces el saldo.</li>
+          <li>Máximo <span class="destacado">2 préstamos activos</span> por socio.</li>
+          <li>Registro de beneficiarios (1 a 4 sumando 100%) y bloqueo de American Express.</li>
+        </ul>
+      </div>
+      <div class="footer">Jesdreel Daniel Mata Gómez &mdash; Base de Datos &mdash; Evaluación 3</div>
+    </section>
+
+    <!-- Slide 2: Diseño de BD -->
+    <section>
+      <h2>Documento 2 &mdash; Diseño de la base de datos</h2>
+      <div class="subtitulo">Estructura física: 11 tablas relacionadas</div>
+      <div style="text-align:center; margin-top:15px;">
+        <img src="assets/estructura_bd.svg" style="max-height: 500px; width: auto; border: 1px solid #CCC; background: white;">
+      </div>
+      <div style="margin-top: 10px;">
+        <span class="kpi">11 tablas</span>
+        <span class="kpi">13 claves foráneas</span>
+        <span class="kpi">6 restricciones UNIQUE</span>
+        <span class="kpi">19 restricciones CHECK</span>
+      </div>
+      <div class="footer">Documento 2 &mdash; Diseño de BD</div>
+    </section>
+
+    <!-- Slide 3: DDL y DML -->
+    <section>
+      <h2>Documento 3 &mdash; Instrucciones DDL y DML</h2>
+      <div class="subtitulo">Guía paso a paso para reinstalar la base desde cero</div>
+      <div class="grid-2" style="margin-top: 20px;">
+        <div>
+          <h3 style="font-size:1em; margin-top:0;">Archivo 1</h3>
+          <p><code>1_Crear_Base_Datos.txt</code></p>
+          <ul>
+            <li>Ejecutar en la base <code>postgres</code>.</li>
+            <li><code>DROP</code> y <code>CREATE DATABASE</code>.</li>
+            <li>Base: <b>BD_Jesdreel_Daniel_Mata_Gomez</b>.</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="font-size:1em; margin-top:0;">Archivo 2</h3>
+          <p><code>2_Estructura_y_Datos.txt</code></p>
+          <ul>
+            <li>Ejecutar en la base nueva.</li>
+            <li>Crea 11 tablas + 11 índices.</li>
+            <li>5 funciones + 5 triggers + 3 vistas.</li>
+            <li>Inserta 30 socios, 240 documentos, 18 préstamos, 80 transacciones.</li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-top: 20px;">
+        <span class="kpi ok">Copiar y pegar sin errores</span>
+        <span class="kpi ok">Compatible con PostgreSQL 12+</span>
+        <span class="kpi ok">Windows CRLF y UTF-8</span>
+      </div>
+      <div class="footer">Documento 3 &mdash; Instrucciones DDL/DML</div>
+    </section>
+
+    <!-- Slide 4: Restricciones ↔ Requisitos con 2 ejemplos -->
+    <section>
+      <h2>Documento 4 &mdash; Restricciones vs Requisitos</h2>
+      <div class="subtitulo">Cada requisito funcional mapeado a su implementación SQL</div>
+      <div class="grid-2" style="margin-top: 15px;">
+        <div>
+          <h3 style="font-size: 0.9em; margin-top:0;">RF-01 &mdash; Edad mínima 19 años</h3>
+          <pre><code>CREATE OR REPLACE FUNCTION check_socio_reglas()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.fecha_nacimiento &gt;
+     CURRENT_DATE - INTERVAL '19 years' THEN
+    RAISE EXCEPTION
+      'El socio debe tener 19 anios o mas cumplidos';
+  END IF;
+  RETURN NEW;
+END; $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_socio_reglas
+  BEFORE INSERT OR UPDATE ON socios
+  FOR EACH ROW EXECUTE FUNCTION check_socio_reglas();</code></pre>
+          <p style="font-size: 0.6em;">Trigger <code>trg_socio_reglas</code> valida antes de cada INSERT o UPDATE en la tabla <code>socios</code>.</p>
+        </div>
+        <div>
+          <h3 style="font-size: 0.9em; margin-top:0;">RF-11 &mdash; American Express prohibido</h3>
+          <pre><code>ALTER TABLE transacciones ADD CONSTRAINT
+chk_transaccion_metodo CHECK (metodo_pago IN (
+  'SPEI',
+  'EFECTIVO',
+  'DEBITO_VISA',
+  'DEBITO_MASTERCARD',
+  'DEBITO_CARNET',
+  'CREDITO_VISA',
+  'CREDITO_MASTERCARD',
+  'CREDITO_CARNET'
+));</code></pre>
+          <p style="font-size: 0.6em;">El CHECK sólo lista los métodos permitidos. AMEX no aparece, por lo que cualquier transacción con ese valor es rechazada.</p>
+        </div>
+      </div>
+      <div class="footer">Documento 4 &mdash; Restricciones vs Requisitos</div>
+    </section>
+
+    <!-- Slide 5: Cierre -->
+    <section>
+      <h2 style="margin-top: 10px;">Resumen final</h2>
+      <div class="caja-info">
+        <ul>
+          <li><b>4 entregables</b>: presentación, diseño, DDL/DML, restricciones.</li>
+          <li><b>Base de datos</b>: <code>BD_Jesdreel_Daniel_Mata_Gomez</code> &mdash; PostgreSQL 18.4.</li>
+          <li><b>11 tablas</b>, <b>5 funciones</b>, <b>5 triggers</b>, <b>3 vistas</b>, <b>11 índices</b>.</li>
+          <li><b>20 requisitos funcionales</b> implementados y blindados.</li>
+          <li>Instalable con solo copiar y pegar dos archivos en pgAdmin.</li>
+        </ul>
+      </div>
+      <div style="margin-top: 20px;">
+        <span class="kpi ok">Sin errores en la ejecución</span>
+        <span class="kpi ok">Restricciones probadas una a una</span>
+      </div>
+      <p class="titulo-final">Gracias por su atención</p>
+      <div class="footer">Jesdreel Daniel Mata Gómez &mdash; 2026</div>
+    </section>
+
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'slide',
+    controls: true,
+    progress: true,
+    width: 1280,
+    height: 800,
+    margin: 0.06,
+    minScale: 0.2,
+    maxScale: 2.0
+  });
+</script>
+</body>
+</html>

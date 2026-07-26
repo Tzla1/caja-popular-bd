@@ -1,0 +1,8 @@
+DROP DATABASE IF EXISTS "BD_Jesdreel_Daniel_Mata_Gomez";
+
+CREATE DATABASE "BD_Jesdreel_Daniel_Mata_Gomez"
+    WITH ENCODING = 'UTF8'
+         TEMPLATE = template0;
+
+COMMENT ON DATABASE "BD_Jesdreel_Daniel_Mata_Gomez"
+    IS 'Base de datos del proyecto Caja Popular - Jesdreel Daniel Mata Gomez';

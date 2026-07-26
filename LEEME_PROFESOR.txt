@@ -1,0 +1,94 @@
+PROYECTO FINAL - BASE DE DATOS
+Caja Popular
+Alumno: Jesdreel Daniel Mata Gomez
+Materia: Base de Datos
+
+===============================================================
+CONTENIDO DE ESTA CARPETA
+===============================================================
+
+1_Crear_Base_Datos.txt
+    Script SQL para crear la base de datos.
+    Pegar en el Query Tool de pgAdmin conectado a la base "postgres".
+
+2_Estructura_y_Datos.txt
+    Script SQL con todas las tablas, restricciones, funciones,
+    triggers, vistas, BLINDAJE DE SEGURIDAD y datos de prueba.
+    Todo en un solo bloque. Pegar en el Query Tool de pgAdmin
+    conectado a la base "BD_Jesdreel_Daniel_Mata_Gomez"
+    (recien creada).
+
+Blindaje_Prueba.txt
+    Mismo blindaje de seguridad empaquetado aparte, para aplicarlo
+    sobre una base que YA existe (sin recrearla). Para instalar desde
+    cero NO se necesita: ya viene dentro de 2_Estructura_y_Datos.txt.
+
+Documento_2_Diseno_BD.pdf
+    Diseno completo de la base: diagrama de estructura,
+    diccionario de datos por tabla, funciones, triggers, vistas
+    y reglas de negocio.
+
+Documento_3_Instrucciones_DDL_DML.pdf
+    Guia paso a paso para instalar la base en Windows con
+    PostgreSQL 18.4 y pgAdmin 4 version 9.14.
+
+Documento_4_Restricciones_Requisitos.pdf
+    Mapeo detallado de cada requisito funcional con la
+    instruccion SQL que lo implementa (RF-01 a RF-20).
+
+Presentacion/index.html
+    Presentacion de 5 diapositivas (abrir con navegador).
+
+Diagramas/
+    SVG y PNG del diagrama de estructura de la base de datos.
+
+===============================================================
+INSTALACION RAPIDA (3 pasos)
+===============================================================
+
+Paso 1: Abrir pgAdmin y conectarse al servidor de PostgreSQL.
+
+Paso 2: Este script (1_Crear_Base_Datos.txt) trae DROP DATABASE y
+        CREATE DATABASE, y PostgreSQL no permite ejecutar esas dos
+        instrucciones junto con otras en un solo Query Tool normal
+        (da error "cannot run inside a transaction block"). Por eso
+        se usa la herramienta PSQL Tool de pgAdmin en vez del Query
+        Tool: ahi si se puede pegar el script completo y correrlo
+        de una sola vez.
+
+        1. En el arbol de la izquierda, dar clic sobre el servidor
+           de PostgreSQL (o sobre la base "postgres").
+        2. Menu superior Tools -> PSQL Tool. Se abre una pestana
+           tipo terminal. Si pide contrasena, escribir la del
+           usuario postgres.
+        3. Abrir 1_Crear_Base_Datos.txt con el Bloc de notas,
+           Ctrl+A, Ctrl+C, y pegar todo dentro de esa terminal
+           (clic derecho -> Paste, o Ctrl+Shift+V). Presionar Enter.
+        4. Van a aparecer los mensajes DROP DATABASE, CREATE DATABASE
+           y COMMENT uno tras otro, todo en un solo pegado.
+
+        Refrescar Databases (clic derecho -> Refresh) en el arbol
+        de la izquierda: aparece "BD_Jesdreel_Daniel_Mata_Gomez".
+
+Paso 3: Clic derecho sobre "BD_Jesdreel_Daniel_Mata_Gomez"
+        -> Query Tool. Abrir 2_Estructura_y_Datos.txt con el
+        Bloc de notas, Ctrl+A, Ctrl+C, pegar en el Query Tool
+        y presionar F5. Listo.
+
+===============================================================
+VERIFICACION
+===============================================================
+
+Ejecutar en el Query Tool de la nueva base:
+
+    SELECT 'Sucursales' AS tabla, COUNT(*) FROM sucursales
+    UNION ALL SELECT 'Empleados',        COUNT(*) FROM empleados
+    UNION ALL SELECT 'Socios',           COUNT(*) FROM socios
+    UNION ALL SELECT 'Documentos',       COUNT(*) FROM documentos_socio
+    UNION ALL SELECT 'Beneficiarios',    COUNT(*) FROM beneficiarios
+    UNION ALL SELECT 'Cuentas ahorro',   COUNT(*) FROM cuentas_ahorro
+    UNION ALL SELECT 'Prestamos',        COUNT(*) FROM prestamos
+    UNION ALL SELECT 'Transacciones',    COUNT(*) FROM transacciones
+    UNION ALL SELECT 'Abonos prestamo',  COUNT(*) FROM abonos_prestamo;
+
+Debe mostrar: 6, 14, 30, 240, 52, 30, 18, 80, 15.
