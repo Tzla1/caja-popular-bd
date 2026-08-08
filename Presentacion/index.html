@@ -179,7 +179,50 @@ chk_transaccion_metodo CHECK (metodo_pago IN (
       <div class="footer">Documento 4 &mdash; Restricciones vs Requisitos</div>
     </section>
 
-    <!-- Slide 5: Migración - una base, tres motores -->
+    <!-- Slide 5: Blindaje de seguridad -->
+    <section>
+      <h2>Blindaje de seguridad</h2>
+      <div class="subtitulo">Auditamos la base intentando brincar las reglas &mdash; y cerramos cada hueco</div>
+      <div class="tablewrap" style="margin-top:12px; font-size:0.5em;">
+        <table style="width:100%; border-collapse:collapse; text-align:left;">
+          <thead>
+            <tr style="background:#1E4B8B; color:white;">
+              <th style="padding:6px 10px;">Hueco detectado</th>
+              <th style="padding:6px 10px;">Cómo quedó blindado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#FAFAFA;"><td style="padding:5px 10px;">Sobregiro (retirar más que el saldo)</td><td style="padding:5px 10px;">Trigger valida fondos antes del retiro</td></tr>
+            <tr><td style="padding:5px 10px;">Saldo editable a mano (<code>UPDATE saldo</code>)</td><td style="padding:5px 10px;">Trigger <code>proteger_saldo</code>: solo vía transacciones</td></tr>
+            <tr style="background:#FAFAFA;"><td style="padding:5px 10px;">Préstamo escalable por <code>UPDATE</code></td><td style="padding:5px 10px;">El trigger cubre <code>INSERT</code> <b>y</b> <code>UPDATE</code></td></tr>
+            <tr><td style="padding:5px 10px;">Transacción cruzada entre socios</td><td style="padding:5px 10px;">Cuenta y préstamo deben ser del mismo socio</td></tr>
+            <tr style="background:#FAFAFA;"><td style="padding:5px 10px;">Tope de depósito evadible</td><td style="padding:5px 10px;">Rango $100&ndash;$10,000 a todo crédito</td></tr>
+            <tr><td style="padding:5px 10px;">Formato débil de CURP / RFC / email</td><td style="padding:5px 10px;"><code>CHECK</code> con expresión regular</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top: 12px;">
+        <span class="kpi warn">7 huecos detectados</span>
+        <span class="kpi ok">7 cerrados</span>
+        <span class="kpi ok">Roles + mínimo privilegio</span>
+      </div>
+      <p style="font-size:0.55em; margin-top:8px;">Además: <b>vistas</b> para consulta segura, <b>roles</b>
+      (<code>caja</code> sin privilegios de admin, <code>consulta</code> solo lectura) y
+      <code>REVOKE ALL ON SCHEMA public</code> &mdash; nadie tiene más permisos de los necesarios.</p>
+      <div class="caja-info" style="border-left-color:#C62828; font-size:0.55em; margin-top:6px;">
+        <b>En un entorno real, además vigilaríamos:</b>
+        <ul style="margin:0.3em 0;">
+          <li><b>Contraseñas:</b> aquí los <code>password_hash</code> son de ejemplo; en producción irían con <b>bcrypt/argon2 + salt</b>.</li>
+          <li><b>Datos personales</b> (CURP, RFC): cifrado en reposo y cumplimiento de la <b>Ley de Protección de Datos</b>.</li>
+          <li><b>Capa de aplicación:</b> consultas parametrizadas para frenar <b>inyección SQL</b>.</li>
+          <li><b>Conexión cifrada (TLS)</b>, base solo en red interna (<code>bind 127.0.0.1</code> + firewall), <b>backups cifrados</b> y <b>bitácora de auditoría</b>.</li>
+        </ul>
+      </div>
+      <div class="gancho">🔑 <b>auditar</b> · 7 huecos · saldo blindado · <b>entorno real</b></div>
+      <div class="footer">Blindaje de seguridad (lo último integrado)</div>
+    </section>
+
+    <!-- Slide 6: Migración - una base, tres motores -->
     <section>
       <h2>Migración &mdash; una base, tres motores</h2>
       <div class="subtitulo">La misma Caja Popular, traducida de PostgreSQL a MariaDB y Oracle</div>
