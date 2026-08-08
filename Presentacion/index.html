@@ -12,6 +12,12 @@
   .reveal h2 { font-size: 1.4em; margin-bottom: 0.3em; }
   .reveal .subtitulo { color: #666; font-size: 0.7em; font-weight: 300; margin-top: -0.2em; margin-bottom: 0.3em; }
   .reveal .footer { position: absolute; bottom: 12px; right: 20px; color: #999; font-size: 12px; }
+  /* Palabras gancho (ayudamemoria del presentador, discretas abajo a la izquierda) */
+  .reveal .gancho {
+    position: absolute; bottom: 12px; left: 20px; font-size: 12px;
+    color: #C77A2B; font-weight: 600; letter-spacing: 0.04em;
+  }
+  .reveal .gancho b { color: #1E4B8B; }
   .reveal ul { display: inline-block; text-align: left; margin: 0.3em 0; }
   .reveal li { margin: 0.25em 0; line-height: 1.35; }
   .reveal p { margin: 0.35em 0; line-height: 1.4; }
@@ -75,6 +81,7 @@
           <li>Registro de beneficiarios (1 a 4 sumando 100%) y bloqueo de American Express.</li>
         </ul>
       </div>
+      <div class="gancho">🔑 <b>cooperativa</b> · 19 años · $3,000</div>
       <div class="footer">Jesdreel Daniel Mata Gómez &mdash; Base de Datos &mdash; Evaluación 3</div>
     </section>
 
@@ -91,6 +98,7 @@
         <span class="kpi">6 restricciones UNIQUE</span>
         <span class="kpi">19 restricciones CHECK</span>
       </div>
+      <div class="gancho">🔑 <b>11 tablas</b> · socio al centro</div>
       <div class="footer">Documento 2 &mdash; Diseño de BD</div>
     </section>
 
@@ -124,6 +132,7 @@
         <span class="kpi ok">Compatible con PostgreSQL 12+</span>
         <span class="kpi ok">Windows CRLF y UTF-8</span>
       </div>
+      <div class="gancho">🔑 <b>2 archivos</b> · copiar y pegar</div>
       <div class="footer">Documento 3 &mdash; Instrucciones DDL/DML</div>
     </section>
 
@@ -166,6 +175,7 @@ chk_transaccion_metodo CHECK (metodo_pago IN (
           <p style="font-size: 0.6em;">El CHECK sólo lista los métodos permitidos. AMEX no aparece, por lo que cualquier transacción con ese valor es rechazada.</p>
         </div>
       </div>
+      <div class="gancho">🔑 edad = <b>trigger</b> · AMEX = <b>CHECK</b></div>
       <div class="footer">Documento 4 &mdash; Restricciones vs Requisitos</div>
     </section>
 
@@ -192,6 +202,7 @@ chk_transaccion_metodo CHECK (metodo_pago IN (
           <li><span class="ok">8 de 8</span> pruebas de reglas rechazan los datos inválidos igual que el original.</li>
         </ul>
       </div>
+      <div class="gancho">🔑 <b>a mano</b> · 488 filas · 8 de 8</div>
       <div class="footer">Migración multi-motor</div>
     </section>
 
@@ -224,6 +235,7 @@ chk_transaccion_metodo CHECK (metodo_pago IN (
       <p style="font-size:0.55em; margin-top:12px;">Los dos retos exclusivos de <b>Oracle</b>: la <span class="destacado">tabla mutante</span>
       (un trigger no puede leer su propia tabla &rarr; se resolvió con <code>COMPOUND TRIGGER</code>) y que
       <code>INSERT ALL</code> repetía el <code>id</code> autogenerado.</p>
+      <div class="gancho">🔑 mismo fondo, otra forma · <b>tabla mutante</b></div>
       <div class="footer">Diferencias de dialecto SQL</div>
     </section>
 
@@ -271,6 +283,7 @@ chk_transaccion_metodo CHECK (metodo_pago IN (
         <span class="destacado">Oracle</span> se justificaría solo si creciera a escala de banco
         grande con presupuesto y soporte empresarial. <b>Lo importante: la base es portable a los tres.</b></p>
       </div>
+      <div class="gancho">🔑 potente · simple · robusto · <b>portable</b></div>
       <div class="footer">Comparativa de motores</div>
     </section>
 
@@ -293,6 +306,7 @@ chk_transaccion_metodo CHECK (metodo_pago IN (
         <span class="kpi ok">Portable a 3 motores</span>
       </div>
       <p class="titulo-final">Gracias por su atención</p>
+      <div class="gancho">🔑 migrada y verificada · <b>GitHub</b> · en vivo</div>
       <div class="footer">Jesdreel Daniel Mata Gómez &mdash; 2026</div>
     </section>
 
