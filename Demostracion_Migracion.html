@@ -1,0 +1,318 @@
+<style>
+  :root{
+    --bg:#ecebe6; --panel:#f7f6f2; --panel-2:#fbfaf7; --ink:#1c1b18; --ink-soft:#4a473f;
+    --line:#d8d5cc; --line-strong:#c3bfb2;
+    --accent:#0e7c74;           /* teal considerado */
+    --pg:#3f5aa6; --maria:#9a5b34; --ora:#b12b28;
+    --ok:#2f7d46; --bad:#b12b28;
+    --mono:ui-monospace,"Cascadia Code","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#131512; --panel:#1b1e1a; --panel-2:#20241f; --ink:#eceae3; --ink-soft:#a7a89c;
+      --line:#2c302a; --line-strong:#3a3f37;
+      --accent:#3fd0c2; --pg:#8aa0e0; --maria:#e0955f; --ora:#f0736f;
+      --ok:#67c98a; --bad:#f0736f;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#ecebe6; --panel:#f7f6f2; --panel-2:#fbfaf7; --ink:#1c1b18; --ink-soft:#4a473f;
+    --line:#d8d5cc; --line-strong:#c3bfb2; --accent:#0e7c74;
+    --pg:#3f5aa6; --maria:#9a5b34; --ora:#b12b28; --ok:#2f7d46; --bad:#b12b28;
+  }
+  :root[data-theme="dark"]{
+    --bg:#131512; --panel:#1b1e1a; --panel-2:#20241f; --ink:#eceae3; --ink-soft:#a7a89c;
+    --line:#2c302a; --line-strong:#3a3f37; --accent:#3fd0c2;
+    --pg:#8aa0e0; --maria:#e0955f; --ora:#f0736f; --ok:#67c98a; --bad:#f0736f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:clamp(1.2rem,4vw,3rem) clamp(1rem,4vw,2.5rem)}
+  .mono{font-family:var(--mono)}
+  .eyebrow{font-family:var(--mono);text-transform:uppercase;letter-spacing:.18em;
+    font-size:.72rem;color:var(--ink-soft)}
+  h1{font-family:var(--mono);font-weight:700;font-size:clamp(1.7rem,4.5vw,2.7rem);
+    line-height:1.08;margin:.5rem 0 .4rem;text-wrap:balance;letter-spacing:-.01em}
+  h2{font-family:var(--mono);font-weight:700;font-size:1.15rem;letter-spacing:.02em;
+    margin:0 0 .2rem;display:flex;align-items:center;gap:.6rem}
+  h2 .num{color:var(--accent);font-size:.9rem}
+  p{color:var(--ink-soft);max-width:66ch}
+  a{color:var(--accent)}
+  section{margin-top:2.6rem}
+  .sub{color:var(--ink-soft);font-size:.95rem;margin:.1rem 0 1.1rem}
+
+  /* header */
+  .flow{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;margin:.4rem 0 1.1rem}
+  .chip{font-family:var(--mono);font-size:.78rem;font-weight:600;padding:.32rem .7rem;
+    border-radius:2px;border:1px solid var(--line-strong);background:var(--panel-2);white-space:nowrap}
+  .chip.pg{color:var(--pg);border-color:color-mix(in srgb,var(--pg) 45%,var(--line))}
+  .chip.maria{color:var(--maria);border-color:color-mix(in srgb,var(--maria) 45%,var(--line))}
+  .chip.ora{color:var(--ora);border-color:color-mix(in srgb,var(--ora) 45%,var(--line))}
+  .arrow{color:var(--ink-soft);font-family:var(--mono)}
+  .status{display:inline-flex;align-items:center;gap:.45rem;font-family:var(--mono);
+    font-size:.8rem;color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 40%,var(--line));
+    padding:.3rem .6rem;border-radius:2px;background:color-mix(in srgb,var(--ok) 8%,transparent)}
+  .dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--ok)}
+
+  /* stat grid */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.9rem;margin-top:1.2rem}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:.9rem 1rem}
+  .stat .k{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft)}
+  .stat .v{font-family:var(--mono);font-weight:700;font-size:1.9rem;font-variant-numeric:tabular-nums;
+    color:var(--ink);margin-top:.15rem}
+  .stat .v.match{color:var(--accent)}
+
+  /* table */
+  .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+  table{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem}
+  th,td{text-align:left;padding:.6rem .8rem;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{font-family:var(--mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--ink-soft);background:var(--panel-2);position:sticky;top:0}
+  tbody tr:last-child td{border-bottom:none}
+  td.feat{font-weight:600;color:var(--ink)}
+  td code,.ic{font-family:var(--mono);font-size:.82rem}
+  td.pg code{color:var(--pg)} td.maria code{color:var(--maria)} td.ora code{color:var(--ora)}
+  .colhdr{display:inline-flex;align-items:center;gap:.4rem}
+  .swatch{width:.6rem;height:.6rem;border-radius:2px;display:inline-block}
+
+  /* terminal */
+  .terms{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-top:1.1rem}
+  @media(max-width:760px){.terms{grid-template-columns:1fr}}
+  .term{background:#101310;border:1px solid var(--line-strong);border-radius:6px;overflow:hidden;
+    font-family:var(--mono);font-size:.8rem}
+  :root[data-theme="light"] .term{background:#14140f}
+  .term .bar{display:flex;align-items:center;gap:.45rem;padding:.5rem .8rem;
+    background:#1b1e1a;border-bottom:1px solid #2c302a}
+  .term .bar .b{width:.6rem;height:.6rem;border-radius:50%;background:#3a3f37}
+  .term .bar .t{margin-left:.5rem;color:#a7a89c;font-size:.74rem;letter-spacing:.03em}
+  .term .body{padding:.85rem 1rem;color:#d8d5cc;line-height:1.7;overflow-x:auto}
+  .term .body .cmd{color:#8fb7d6}
+  .term .body .mut{color:#7d8478}
+  .term .n{color:#e0c98a;font-variant-numeric:tabular-nums}
+  .pass{color:#67c98a} .rej{color:#f0736f}
+
+  /* checks list */
+  .checks{list-style:none;padding:0;margin:1rem 0 0;display:grid;gap:.5rem}
+  .checks li{display:grid;grid-template-columns:auto 1fr auto;gap:.7rem;align-items:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:.55rem .8rem}
+  .checks .lbl{font-size:.9rem}
+  .checks .mech{font-family:var(--mono);font-size:.72rem;color:var(--ink-soft)}
+  .tag{font-family:var(--mono);font-size:.7rem;font-weight:700;padding:.2rem .5rem;border-radius:2px;white-space:nowrap}
+  .tag.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--ok) 35%,var(--line))}
+
+  /* run cards */
+  .runs{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem;margin-top:1.1rem}
+  @media(max-width:760px){.runs{grid-template-columns:1fr}}
+  .run{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1rem 1.1rem}
+  .run h3{font-family:var(--mono);margin:.1rem 0 .6rem;font-size:.95rem;display:flex;gap:.5rem;align-items:center}
+  .run pre{margin:0;background:var(--panel-2);border:1px solid var(--line);border-radius:4px;
+    padding:.7rem .8rem;overflow-x:auto;font-family:var(--mono);font-size:.78rem;color:var(--ink);line-height:1.6}
+  .run pre .c{color:var(--ink-soft)}
+  .foot{margin-top:2.8rem;padding-top:1.1rem;border-top:1px solid var(--line);
+    font-family:var(--mono);font-size:.76rem;color:var(--ink-soft);display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+</style>
+
+<div class="wrap">
+
+  <div class="eyebrow">Caja Popular · Evaluación 3 · Migración de base de datos</div>
+  <h1>Una base, tres motores:<br>PostgreSQL traducida a MariaDB y Oracle</h1>
+  <div class="flow">
+    <span class="chip pg">PostgreSQL · origen</span>
+    <span class="arrow">→</span>
+    <span class="chip maria">MariaDB 12.3</span>
+    <span class="arrow">+</span>
+    <span class="chip ora">Oracle Free 23ai</span>
+    <span class="status"><span class="dot"></span>Cargada y verificada en ambos</span>
+  </div>
+  <p>El esquema original (11 tablas, restricciones <code>CHECK</code> con regex, 7 funciones
+  <span class="mono">plpgsql</span> con triggers, 3 vistas, roles y datos semilla con orden crítico)
+  se tradujo a los dialectos de MariaDB y Oracle conservando <strong>todas</strong> las reglas de negocio.
+  Los conteos coinciden fila por fila y cada restricción rechaza los datos inválidos en los dos motores.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="k">Tablas</div><div class="v match">11</div></div>
+    <div class="stat"><div class="k">Filas de datos</div><div class="v match">488</div></div>
+    <div class="stat"><div class="k">Restricciones</div><div class="v match">48</div></div>
+    <div class="stat"><div class="k">Vistas</div><div class="v match">3</div></div>
+    <div class="stat"><div class="k">Reglas por trigger</div><div class="v match">7</div></div>
+  </div>
+
+  <!-- ================= MAPEO ================= -->
+  <section>
+    <h2><span class="num">01</span> Cómo se tradujo cada elemento</h2>
+    <div class="sub">Fila por fila: qué construcción de PostgreSQL se convirtió en qué, y por qué cambia.</div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Elemento</th>
+            <th><span class="colhdr"><span class="swatch" style="background:var(--pg)"></span>PostgreSQL (origen)</span></th>
+            <th><span class="colhdr"><span class="swatch" style="background:var(--maria)"></span>MariaDB</span></th>
+            <th><span class="colhdr"><span class="swatch" style="background:var(--ora)"></span>Oracle</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="feat">Autoincremento</td>
+            <td class="pg"><code>GENERATED ALWAYS AS IDENTITY</code></td>
+            <td class="maria"><code>INT AUTO_INCREMENT</code></td>
+            <td class="ora"><code>GENERATED ALWAYS AS IDENTITY</code></td></tr>
+          <tr><td class="feat">Booleano</td>
+            <td class="pg"><code>BOOLEAN</code></td>
+            <td class="maria"><code>BOOLEAN</code> (=TINYINT(1))</td>
+            <td class="ora"><code>NUMBER(1)</code> + <code>CHECK IN (0,1)</code></td></tr>
+          <tr><td class="feat">Texto largo</td>
+            <td class="pg"><code>TEXT</code></td><td class="maria"><code>TEXT</code></td><td class="ora"><code>CLOB</code></td></tr>
+          <tr><td class="feat">Decimal / dinero</td>
+            <td class="pg"><code>NUMERIC(12,2)</code></td><td class="maria"><code>DECIMAL(12,2)</code></td><td class="ora"><code>NUMBER(12,2)</code></td></tr>
+          <tr><td class="feat">Fecha actual por defecto</td>
+            <td class="pg"><code>DEFAULT CURRENT_DATE</code></td>
+            <td class="maria"><code>DEFAULT (CURDATE())</code></td>
+            <td class="ora"><code>DEFAULT TRUNC(SYSDATE)</code></td></tr>
+          <tr><td class="feat">Marca de tiempo</td>
+            <td class="pg"><code>CURRENT_TIMESTAMP</code></td><td class="maria"><code>CURRENT_TIMESTAMP</code></td><td class="ora"><code>SYSTIMESTAMP</code></td></tr>
+          <tr><td class="feat">CHECK con expresión regular</td>
+            <td class="pg"><code>curp ~ '^[A-Z]{4}…'</code></td>
+            <td class="maria"><code>curp REGEXP '…'</code></td>
+            <td class="ora"><code>REGEXP_LIKE(curp,'…')</code></td></tr>
+          <tr><td class="feat">Función + trigger</td>
+            <td class="pg"><code>plpgsql</code> + <code>CREATE TRIGGER … EXECUTE FUNCTION</code></td>
+            <td class="maria">Trigger SQL/PSM (<code>BEGIN…END</code>)</td>
+            <td class="ora">Trigger PL/SQL (<code>:NEW</code>/<code>:OLD</code>)</td></tr>
+          <tr><td class="feat">Lanzar error de negocio</td>
+            <td class="pg"><code>RAISE EXCEPTION</code></td>
+            <td class="maria"><code>SIGNAL SQLSTATE '45000'</code></td>
+            <td class="ora"><code>RAISE_APPLICATION_ERROR(-20001)</code></td></tr>
+          <tr><td class="feat">Variable de sesión (ledger)</td>
+            <td class="pg"><code>set_config / current_setting</code></td>
+            <td class="maria">Variable de usuario <code>@caja_ledger</code></td>
+            <td class="ora">Variable de paquete <code>pkg_caja.g_ledger</code></td></tr>
+          <tr><td class="feat">Comparación null-safe</td>
+            <td class="pg"><code>IS DISTINCT FROM</code></td>
+            <td class="maria"><code>NOT (a &lt;=&gt; b)</code></td>
+            <td class="ora"><code>&lt;&gt;</code> (+ manejo de NULL)</td></tr>
+          <tr><td class="feat">Tabla mutante en trigger</td>
+            <td class="pg">Permitido</td>
+            <td class="maria">Permitido</td>
+            <td class="ora"><code>COMPOUND TRIGGER</code> (evita ORA-04091)</td></tr>
+          <tr><td class="feat">INSERT de varias filas</td>
+            <td class="pg"><code>VALUES (…),(…)</code></td>
+            <td class="maria"><code>VALUES (…),(…)</code></td>
+            <td class="ora">Un <code>INSERT</code> por fila</td></tr>
+          <tr><td class="feat">Constructor VALUES en FROM</td>
+            <td class="pg"><code>(VALUES …) AS t(tipo)</code></td>
+            <td class="maria"><code>UNION ALL SELECT</code></td>
+            <td class="ora"><code>UNION ALL SELECT … FROM dual</code></td></tr>
+          <tr><td class="feat">Días de mora (fecha − fecha)</td>
+            <td class="pg"><code>CURRENT_DATE - fecha</code></td>
+            <td class="maria"><code>DATEDIFF(CURDATE(),fecha)</code></td>
+            <td class="ora"><code>TRUNC(SYSDATE) - fecha</code></td></tr>
+          <tr><td class="feat">Roles y permisos</td>
+            <td class="pg"><code>CREATE ROLE</code> / <code>GRANT</code></td>
+            <td class="maria"><code>CREATE ROLE</code> + usuarios</td>
+            <td class="ora"><code>CREATE ROLE</code> + grants por tabla</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= EVIDENCIA CONTEOS ================= -->
+  <section>
+    <h2><span class="num">02</span> Prueba de carga: los conteos coinciden</h2>
+    <div class="sub">Salida real de cada motor tras cargar los scripts. Mismas filas en los dos.</div>
+    <div class="terms">
+      <div class="term">
+        <div class="bar"><span class="b"></span><span class="b"></span><span class="b"></span>
+          <span class="t">MariaDB · BD_Jesdreel_Daniel_Mata_Gomez</span></div>
+        <div class="body">
+<span class="mut">sucursales</span> ......... <span class="n">6</span><br>
+<span class="mut">empleados</span> .......... <span class="n">14</span><br>
+<span class="mut">socios</span> ............. <span class="n">30</span><br>
+<span class="mut">documentos_socio</span> ... <span class="n">240</span><br>
+<span class="mut">beneficiarios</span> ...... <span class="n">52</span><br>
+<span class="mut">cuentas_ahorro</span> ..... <span class="n">30</span><br>
+<span class="mut">prestamos</span> .......... <span class="n">18</span><br>
+<span class="mut">transacciones</span> ...... <span class="n">80</span><br>
+<span class="mut">abonos_prestamo</span> .... <span class="n">15</span><br>
+<span class="mut">triggers</span> ........... <span class="n">9</span> &nbsp;<span class="mut">vistas</span> <span class="n">3</span><br>
+<span class="mut">socio 8</span> → <span class="pass">fallecido</span> (defunción OK)
+        </div>
+      </div>
+      <div class="term">
+        <div class="bar"><span class="b"></span><span class="b"></span><span class="b"></span>
+          <span class="t">Oracle · schema CAJA @ FREEPDB1</span></div>
+        <div class="body">
+<span class="mut">SUCURSALES</span> ......... <span class="n">6</span><br>
+<span class="mut">EMPLEADOS</span> .......... <span class="n">14</span><br>
+<span class="mut">SOCIOS</span> ............. <span class="n">30</span><br>
+<span class="mut">DOCUMENTOS_SOCIO</span> ... <span class="n">240</span><br>
+<span class="mut">BENEFICIARIOS</span> ...... <span class="n">52</span><br>
+<span class="mut">CUENTAS_AHORRO</span> ..... <span class="n">30</span><br>
+<span class="mut">PRESTAMOS</span> .......... <span class="n">18</span><br>
+<span class="mut">TRANSACCIONES</span> ...... <span class="n">80</span><br>
+<span class="mut">ABONOS_PRESTAMO</span> .... <span class="n">15</span><br>
+<span class="mut">triggers</span> ........... <span class="n">5</span>* <span class="mut">vistas</span> <span class="n">3</span><br>
+<span class="mut">socio 8</span> → <span class="pass">fallecido</span> (defunción OK)
+        </div>
+      </div>
+    </div>
+    <p style="font-size:.82rem;margin-top:.7rem">*Oracle muestra 5 triggers porque los 7 <em>disparos</em> de reglas
+    se agrupan en 2 <span class="mono">COMPOUND TRIGGER</span> (préstamos y beneficiarios) para evitar el error de tabla mutante.
+    La lógica es idéntica.</p>
+  </section>
+
+  <!-- ================= EVIDENCIA RESTRICCIONES ================= -->
+  <section>
+    <h2><span class="num">03</span> Prueba de reglas: cada restricción rechaza lo inválido</h2>
+    <div class="sub">Se intentó violar cada regla en los dos motores. Resultado idéntico: bloqueado.</div>
+    <ul class="checks">
+      <li><span class="tag ok">RECHAZA</span><span class="lbl">Socio menor de 19 años</span><span class="mech">trigger · edad</span></li>
+      <li><span class="tag ok">RECHAZA</span><span class="lbl">Aporte inicial &lt; $3,000</span><span class="mech">CHECK + trigger</span></li>
+      <li><span class="tag ok">RECHAZA</span><span class="lbl">CURP con formato inválido</span><span class="mech">CHECK regex + largo</span></li>
+      <li><span class="tag ok">RECHAZA</span><span class="lbl">Tercer préstamo activo del mismo socio</span><span class="mech">trigger · máx 2</span></li>
+      <li><span class="tag ok">RECHAZA</span><span class="lbl">Préstamo &gt; 2× el saldo de la cuenta</span><span class="mech">trigger · vs saldo</span></li>
+      <li><span class="tag ok">RECHAZA</span><span class="lbl">UPDATE directo al saldo (sin transacción)</span><span class="mech">trigger · proteger_saldo</span></li>
+      <li><span class="tag ok">RECHAZA</span><span class="lbl">Retiro sin fondos suficientes</span><span class="mech">trigger · fondos</span></li>
+      <li><span class="tag ok">APLICA</span><span class="lbl">Depósito válido: saldo 8,500 → 9,000</span><span class="mech">trigger · aplicar_transaccion</span></li>
+    </ul>
+  </section>
+
+  <!-- ================= COMO PROBAR ================= -->
+  <section>
+    <h2><span class="num">04</span> Cómo probarlo en clase</h2>
+    <div class="sub">Cada motor se levanta con un solo comando. Los scripts numerados corren en orden.</div>
+    <div class="runs">
+      <div class="run">
+        <h3><span class="swatch" style="background:var(--maria)"></span>MariaDB</h3>
+        <pre><span class="c"># ya instalado en el equipo</span>
+cd MariaDB
+./run_all.sh
+
+<span class="c"># entrar a consultar</span>
+sudo mariadb BD_Jesdreel_Daniel_Mata_Gomez</pre>
+      </div>
+      <div class="run">
+        <h3><span class="swatch" style="background:var(--ora)"></span>Oracle (Docker)</h3>
+        <pre><span class="c"># levanta Oracle Free en contenedor</span>
+cd Oracle
+./run_all.sh
+
+<span class="c"># entrar a consultar</span>
+docker exec -it oracle-caja \
+  sqlplus caja/Caja_2026@localhost:1521/FREEPDB1</pre>
+      </div>
+    </div>
+    <p style="margin-top:1rem"><strong>Orden de los scripts Oracle:</strong>
+    <span class="mono" style="font-size:.82rem">0_Crear_Usuario → 1_Estructura → 2_Logica_Reglas → 3_Datos → 4_Logica_Movimiento → 5_Roles_Permisos</span>.
+    El orden importa: las reglas se crean antes de los datos (validan la carga) y la lógica de movimiento
+    <em>después</em>, para no recalcular los saldos semilla — exactamente como el original.</p>
+  </section>
+
+  <div class="foot">
+    <span>Jesdreel Daniel Mata Gómez · Caja Popular</span>
+    <span>MariaDB 12.3 · Oracle Free 23ai · verificado en vivo</span>
+  </div>
+
+</div>

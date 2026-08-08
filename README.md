@@ -3,6 +3,7 @@
 **Alumno:** Jesdreel Daniel Mata Gómez
 **Materia:** Base de Datos
 **Motor:** PostgreSQL 18 · **Herramienta:** pgAdmin 4
+**Migrada también a:** MariaDB 12.3 · Oracle 23ai Free (ver carpetas `MariaDB/` y `Oracle/`)
 
 Sistema de base de datos para una Caja Popular (cooperativa de ahorro y préstamo):
 socios, cuentas de ahorro, préstamos, transacciones, beneficiarios y sucursales,
@@ -110,6 +111,25 @@ VALUES (1, 'interes_ahorro', 50000.00, 'EFECTIVO');      -- Fuera de rango 100-1
 | `Documento_4_Restricciones_Requisitos.pdf` | Mapeo requisitos RF-01 a RF-20 ↔ SQL |
 | `Diagramas/` | Diagrama de estructura (SVG y PNG) |
 | `Presentacion/` | Presentación (abrir `index.html` en el navegador) |
+| `MariaDB/` | Migración a MariaDB: scripts `.sql`, `run_all.sh` y `LEEME_PROFESOR_MARIADB.txt` |
+| `Oracle/` | Migración a Oracle (Docker): scripts `.sql`, `run_all.sh` y `LEEME_PROFESOR_ORACLE.txt` |
+| `Demostracion_Migracion.html` | Evidencia visual de la migración (abrir en navegador) |
+| `00_INDICE_GENERAL.txt` | Mapa de todo el proyecto |
+
+---
+
+## 🔁 Migración multi-motor (PostgreSQL → MariaDB · Oracle)
+
+La misma base se tradujo **a mano** (no hay traductor automático fiable: `pgloader`
+migra datos pero descarta triggers, funciones, `CHECK` con regex y roles) y se
+**verificó en vivo** en los tres motores.
+
+- **Resultado idéntico:** 488 filas cargadas, 48 restricciones (28 CHECK, 12 FK, 8 UNIQUE), 3 vistas.
+- **8 de 8** pruebas de reglas rechazan los datos inválidos igual que el original.
+- Retos propios de **Oracle** resueltos: tabla mutante (`ORA-04091`) → `COMPOUND TRIGGER`; `INSERT ALL` con `IDENTITY` → un `INSERT` por fila.
+
+Instalación con un comando: `MariaDB/run_all.sh` (Linux) · `Oracle/run_all.sh` (Docker).
+Diferencias de dialecto documentadas en los `LEEME_PROFESOR_*` de cada carpeta.
 
 ---
 

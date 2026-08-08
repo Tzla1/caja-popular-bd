@@ -1,0 +1,70 @@
+====================================================================
+ PROYECTO FINAL - BASE DE DATOS  ·  CAJA POPULAR
+ Alumno: Jesdreel Daniel Mata Gomez   ·   Materia: Base de Datos
+====================================================================
+
+Este proyecto implementa la base de datos de una Caja Popular
+(institucion financiera comunitaria) en PostgreSQL, y ADEMAS la
+migra completa y verificada a MariaDB y a Oracle.
+
+Empezar por LEEME_PROFESOR.txt (version PostgreSQL). Para las
+versiones migradas, ver los LEEME dentro de las carpetas MariaDB/
+y Oracle/.
+
+--------------------------------------------------------------------
+ RAIZ  -  Version original PostgreSQL
+--------------------------------------------------------------------
+  LEEME_PROFESOR.txt ............. Guia de instalacion PostgreSQL
+  1_Crear_Base_Datos.txt ......... Crea la base (PSQL Tool)
+  2_Estructura_y_Datos.txt ....... Tablas, triggers, vistas, datos
+  Blindaje_Prueba.txt ............ Roles/seguridad aparte
+  Documento_2_Diseno_BD.pdf ...... Diseno y diccionario de datos
+  Documento_3_Instrucciones_*.pdf  Guia DDL/DML paso a paso
+  Documento_4_Restricciones_*.pdf  Requisitos (RF-01..RF-20) vs SQL
+  Diagramas/ ..................... Diagrama de estructura (SVG/PNG)
+
+--------------------------------------------------------------------
+ Presentacion/  -  Diapositivas
+--------------------------------------------------------------------
+  index.html ..................... Presentacion (abrir en navegador).
+                                   Incluye 3 slides de la migracion:
+                                   PostgreSQL -> MariaDB / Oracle,
+                                   diferencias y comparativa de motores.
+
+--------------------------------------------------------------------
+ MariaDB/  -  Migracion a MariaDB 12.3
+--------------------------------------------------------------------
+  LEEME_PROFESOR_MARIADB.txt ..... Guia + diferencias vs PostgreSQL
+  1_Crear_Base_Datos.sql
+  2_Estructura_y_Datos.sql
+  3_Roles_Permisos.sql
+  run_all.sh ..................... Carga todo con un comando
+
+--------------------------------------------------------------------
+ Oracle/  -  Migracion a Oracle 23ai Free (Docker)
+--------------------------------------------------------------------
+  LEEME_PROFESOR_ORACLE.txt ...... Guia + diferencias vs PostgreSQL
+  0_Crear_Usuario.sql
+  1_Estructura.sql
+  2_Logica_Reglas.sql
+  3_Datos.sql
+  4_Logica_Movimiento.sql
+  5_Roles_Permisos.sql
+  run_all.sh ..................... Levanta Oracle y carga todo
+
+--------------------------------------------------------------------
+ Demostracion_Migracion.html  -  Evidencia visual
+--------------------------------------------------------------------
+  Pagina con el mapeo de traduccion (PostgreSQL/MariaDB/Oracle) y
+  la evidencia de carga verificada en ambos motores. Abrir en navegador.
+
+====================================================================
+ RESULTADO DE LA MIGRACION (verificado en vivo)
+====================================================================
+  * Conteos identicos en los 3 motores: 6, 14, 30, 240, 52, 30,
+    18, 80, 15  (488 filas de datos en total).
+  * 48 restricciones (28 CHECK, 12 FK, 8 UNIQUE) + 3 vistas.
+  * 8 de 8 pruebas de reglas rechazan los datos invalidos igual
+    que el original PostgreSQL.
+  * Misma logica de negocio; solo cambia el dialecto SQL.
+====================================================================

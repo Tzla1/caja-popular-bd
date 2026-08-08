@@ -169,7 +169,112 @@ chk_transaccion_metodo CHECK (metodo_pago IN (
       <div class="footer">Documento 4 &mdash; Restricciones vs Requisitos</div>
     </section>
 
-    <!-- Slide 5: Cierre -->
+    <!-- Slide 5: Migración - una base, tres motores -->
+    <section>
+      <h2>Migración &mdash; una base, tres motores</h2>
+      <div class="subtitulo">La misma Caja Popular, traducida de PostgreSQL a MariaDB y Oracle</div>
+      <div style="margin: 18px 0; font-size: 0.95em;">
+        <span class="kpi" style="background:#336791;">PostgreSQL</span>
+        <span style="color:#999;">&rarr;</span>
+        <span class="kpi" style="background:#9a5b34;">MariaDB 12.3</span>
+        <span style="color:#999;">+</span>
+        <span class="kpi" style="background:#C62828;">Oracle 23ai</span>
+      </div>
+      <div class="caja-info">
+        <p>No existe un traductor automático fiable para este caso: herramientas como
+        <code>pgloader</code> migran tablas y datos pero <span class="destacado">descartan</span>
+        funciones, triggers, <code>CHECK</code> con regex y roles &mdash; justo el corazón del proyecto.
+        La traducción se hizo <b>a mano y se verificó en vivo</b> en cada motor.</p>
+        <p><b>Resultado idéntico en los tres:</b></p>
+        <ul>
+          <li><span class="ok">488 filas</span> cargadas &mdash; los conteos coinciden tabla por tabla (30 socios, 240 documentos, 80 transacciones&hellip;).</li>
+          <li><span class="ok">48 restricciones</span> activas (28 CHECK, 12 FK, 8 UNIQUE) + 3 vistas.</li>
+          <li><span class="ok">8 de 8</span> pruebas de reglas rechazan los datos inválidos igual que el original.</li>
+        </ul>
+      </div>
+      <div class="footer">Migración multi-motor</div>
+    </section>
+
+    <!-- Slide 6: Diferencias de traducción -->
+    <section>
+      <h2>¿Qué cambia al traducir?</h2>
+      <div class="subtitulo">Misma lógica de negocio, distinta forma de escribirla</div>
+      <div class="tablewrap" style="margin-top:12px; font-size:0.52em;">
+        <table style="width:100%; border-collapse:collapse; text-align:left;">
+          <thead>
+            <tr style="background:#1E4B8B; color:white;">
+              <th style="padding:6px 10px;">Elemento</th>
+              <th style="padding:6px 10px; color:#bcd;">PostgreSQL</th>
+              <th style="padding:6px 10px; color:#e8b48f;">MariaDB</th>
+              <th style="padding:6px 10px; color:#f2a3a1;">Oracle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#FAFAFA;"><td style="padding:5px 10px;"><b>Autoincremento</b></td><td style="padding:5px 10px;"><code>GENERATED&hellip;IDENTITY</code></td><td style="padding:5px 10px;"><code>AUTO_INCREMENT</code></td><td style="padding:5px 10px;"><code>GENERATED&hellip;IDENTITY</code></td></tr>
+            <tr><td style="padding:5px 10px;"><b>Booleano</b></td><td style="padding:5px 10px;"><code>BOOLEAN</code></td><td style="padding:5px 10px;"><code>BOOLEAN</code></td><td style="padding:5px 10px;"><code>NUMBER(1)+CHECK</code></td></tr>
+            <tr style="background:#FAFAFA;"><td style="padding:5px 10px;"><b>Texto largo</b></td><td style="padding:5px 10px;"><code>TEXT</code></td><td style="padding:5px 10px;"><code>TEXT</code></td><td style="padding:5px 10px;"><code>CLOB</code></td></tr>
+            <tr><td style="padding:5px 10px;"><b>CHECK con regex</b></td><td style="padding:5px 10px;"><code>col ~ 'patrón'</code></td><td style="padding:5px 10px;"><code>col REGEXP '&hellip;'</code></td><td style="padding:5px 10px;"><code>REGEXP_LIKE(&hellip;)</code></td></tr>
+            <tr style="background:#FAFAFA;"><td style="padding:5px 10px;"><b>Lanzar error</b></td><td style="padding:5px 10px;"><code>RAISE EXCEPTION</code></td><td style="padding:5px 10px;"><code>SIGNAL '45000'</code></td><td style="padding:5px 10px;"><code>RAISE_APPLICATION_ERROR</code></td></tr>
+            <tr><td style="padding:5px 10px;"><b>Variable candado</b></td><td style="padding:5px 10px;"><code>set_config</code></td><td style="padding:5px 10px;"><code>@caja_ledger</code></td><td style="padding:5px 10px;"><code>pkg_caja.g_ledger</code></td></tr>
+            <tr style="background:#FAFAFA;"><td style="padding:5px 10px;"><b>Tabla mutante</b></td><td style="padding:5px 10px;">permitido</td><td style="padding:5px 10px;">permitido</td><td style="padding:5px 10px;"><b>COMPOUND TRIGGER</b></td></tr>
+            <tr><td style="padding:5px 10px;"><b>INSERT multifila</b></td><td style="padding:5px 10px;"><code>VALUES(),()</code></td><td style="padding:5px 10px;"><code>VALUES(),()</code></td><td style="padding:5px 10px;">1 INSERT por fila</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size:0.55em; margin-top:12px;">Los dos retos exclusivos de <b>Oracle</b>: la <span class="destacado">tabla mutante</span>
+      (un trigger no puede leer su propia tabla &rarr; se resolvió con <code>COMPOUND TRIGGER</code>) y que
+      <code>INSERT ALL</code> repetía el <code>id</code> autogenerado.</p>
+      <div class="footer">Diferencias de dialecto SQL</div>
+    </section>
+
+    <!-- Slide 7: Cuál es mejor -->
+    <section>
+      <h2>¿Cuál motor es mejor?</h2>
+      <div class="subtitulo">No hay un único ganador: depende del contexto</div>
+      <div class="grid-2" style="margin-top:12px; grid-template-columns:1fr 1fr 1fr;">
+        <div style="border-top:4px solid #336791;">
+          <h3 style="font-size:0.95em; margin-top:0; color:#336791;">PostgreSQL</h3>
+          <p><b>El más potente y gratuito.</b></p>
+          <ul>
+            <li><span class="ok">+</span> plpgsql muy expresivo</li>
+            <li><span class="ok">+</span> regex y CHECK nativos</li>
+            <li><span class="ok">+</span> estándar, open source</li>
+            <li><span class="destacado">&minus;</span> menos "empresas grandes"</li>
+          </ul>
+        </div>
+        <div style="border-top:4px solid #9a5b34;">
+          <h3 style="font-size:0.95em; margin-top:0; color:#9a5b34;">MariaDB</h3>
+          <p><b>El más simple y ligero.</b></p>
+          <ul>
+            <li><span class="ok">+</span> fácil de desplegar (web/LAMP)</li>
+            <li><span class="ok">+</span> rápido, open source</li>
+            <li><span class="ok">+</span> gran comunidad</li>
+            <li><span class="destacado">&minus;</span> triggers menos flexibles</li>
+          </ul>
+        </div>
+        <div style="border-top:4px solid #C62828;">
+          <h3 style="font-size:0.95em; margin-top:0; color:#C62828;">Oracle</h3>
+          <p><b>El más robusto y empresarial.</b></p>
+          <ul>
+            <li><span class="ok">+</span> escala y seguridad bancaria</li>
+            <li><span class="ok">+</span> PL/SQL muy completo</li>
+            <li><span class="destacado">&minus;</span> comercial (licencia cara)</li>
+            <li><span class="destacado">&minus;</span> pesado y complejo</li>
+          </ul>
+        </div>
+      </div>
+      <div class="caja-info" style="margin-top:14px;">
+        <p><b>Veredicto para la Caja Popular:</b> siendo una institución financiera
+        <b>comunitaria</b>, <span class="ok">PostgreSQL</span> ofrece el mejor equilibrio
+        (potencia de reglas + costo cero). <span style="color:#9a5b34;font-weight:bold;">MariaDB</span>
+        es ideal si se prioriza simplicidad y despliegue web económico.
+        <span class="destacado">Oracle</span> se justificaría solo si creciera a escala de banco
+        grande con presupuesto y soporte empresarial. <b>Lo importante: la base es portable a los tres.</b></p>
+      </div>
+      <div class="footer">Comparativa de motores</div>
+    </section>
+
+    <!-- Slide 8: Cierre -->
     <section>
       <h2 style="margin-top: 10px;">Resumen final</h2>
       <div class="caja-info">
@@ -179,11 +284,13 @@ chk_transaccion_metodo CHECK (metodo_pago IN (
           <li><b>11 tablas</b>, <b>5 funciones</b>, <b>5 triggers</b>, <b>3 vistas</b>, <b>11 índices</b>.</li>
           <li><b>20 requisitos funcionales</b> implementados y blindados.</li>
           <li>Instalable con solo copiar y pegar dos archivos en pgAdmin.</li>
+          <li><b>Migrada y verificada</b> también a <span style="color:#9a5b34;font-weight:bold;">MariaDB</span> y <span class="destacado">Oracle</span> &mdash; misma lógica, 488 filas, 8/8 reglas.</li>
         </ul>
       </div>
       <div style="margin-top: 20px;">
         <span class="kpi ok">Sin errores en la ejecución</span>
         <span class="kpi ok">Restricciones probadas una a una</span>
+        <span class="kpi ok">Portable a 3 motores</span>
       </div>
       <p class="titulo-final">Gracias por su atención</p>
       <div class="footer">Jesdreel Daniel Mata Gómez &mdash; 2026</div>

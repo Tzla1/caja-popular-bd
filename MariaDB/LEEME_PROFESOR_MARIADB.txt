@@ -1,0 +1,203 @@
+PROYECTO FINAL - BASE DE DATOS
+Caja Popular  -  MIGRACION A MariaDB
+Alumno: Jesdreel Daniel Mata Gomez
+Materia: Base de Datos
+
+Esta es la MISMA base "Caja Popular" del entregable de PostgreSQL,
+traducida al dialecto de MariaDB. Se conservan TODAS las reglas de
+negocio: restricciones CHECK con expresiones regulares, triggers,
+vistas, roles y los datos de prueba. Los conteos coinciden fila por
+fila con la version PostgreSQL y cada restriccion rechaza los datos
+invalidos igual que en el original.
+
+Motor probado: MariaDB 12.3 (funciona igual en 10.2 o superior).
+
+
+===============================================================
+CONTENIDO DE ESTA CARPETA
+===============================================================
+
+1_Crear_Base_Datos.sql
+    Crea la base de datos "BD_Jesdreel_Daniel_Mata_Gomez" con
+    juego de caracteres utf8mb4 (para acentos y la N con tilde).
+
+2_Estructura_y_Datos.sql
+    Todo en un solo bloque: las 11 tablas con sus restricciones,
+    los indices, el procedimiento y los 9 triggers de reglas,
+    las 3 vistas, los comentarios de tabla y los datos de prueba.
+
+3_Roles_Permisos.sql
+    Roles y usuarios con contrasena (equivale al "blindaje" de la
+    version PostgreSQL). Se ejecuta al final.
+
+run_all.sh
+    Script que carga los 3 archivos en orden y muestra la
+    verificacion. Un solo comando.
+
+
+===============================================================
+INSTALACION RAPIDA (Linux, por terminal)
+===============================================================
+
+MariaDB en Linux se autentica como root por el socket del sistema,
+por eso los comandos usan "sudo mariadb".
+
+Opcion A - todo de una vez:
+
+    cd MariaDB
+    ./run_all.sh
+
+Opcion B - paso a paso:
+
+    Paso 1: Crear la base
+        sudo mariadb < 1_Crear_Base_Datos.sql
+
+    Paso 2: Estructura, logica y datos
+        sudo mariadb < 2_Estructura_y_Datos.sql
+
+    Paso 3: Roles y permisos
+        sudo mariadb < 3_Roles_Permisos.sql
+
+    Entrar a consultar:
+        sudo mariadb BD_Jesdreel_Daniel_Mata_Gomez
+
+
+===============================================================
+INSTALACION EN WINDOWS (con HeidiSQL o phpMyAdmin)
+===============================================================
+
+    1. Instalar MariaDB desde mariadb.org (incluye HeidiSQL).
+    2. Abrir HeidiSQL y conectarse al servidor local (usuario root).
+    3. Menu File -> Load SQL file... -> abrir 1_Crear_Base_Datos.sql,
+       y presionar F9 (Execute) para correrlo.
+    4. En el panel de bases (izquierda) seleccionar
+       "BD_Jesdreel_Daniel_Mata_Gomez".
+    5. File -> Load SQL file... -> 2_Estructura_y_Datos.sql -> F9.
+    6. File -> Load SQL file... -> 3_Roles_Permisos.sql -> F9.
+
+    NOTA: el archivo 2 usa "DELIMITER $$" para los triggers.
+    HeidiSQL, phpMyAdmin y el cliente de terminal lo entienden.
+    Si se usa otra herramienta que NO soporte DELIMITER, cargar
+    el archivo desde la linea de comandos (Opcion A/B de arriba).
+
+
+===============================================================
+QUE CAMBIO RESPECTO A PostgreSQL  (y por que)
+===============================================================
+
+PostgreSQL y MariaDB no hablan exactamente el mismo SQL. Estas son
+las traducciones que se hicieron. La logica de negocio es identica;
+solo cambia la forma de escribirla.
+
+  ELEMENTO                POSTGRESQL              MariaDB
+  ----------------------  ----------------------  -----------------------
+  Nombre de base          "comillas dobles"       `acento grave`
+  Autoincremento          GENERATED ALWAYS        INT AUTO_INCREMENT
+                          AS IDENTITY
+  Booleano                BOOLEAN                  BOOLEAN (= TINYINT(1))
+  Texto largo             TEXT                     TEXT (igual)
+  Decimal                 NUMERIC(12,2)            DECIMAL(12,2)
+  Fecha por defecto       DEFAULT CURRENT_DATE     DEFAULT (CURDATE())
+  CHECK con regex         columna ~ 'patron'       columna REGEXP 'patron'
+  Funcion + trigger       plpgsql + EXECUTE        Trigger BEGIN..END
+                          FUNCTION                 (SQL/PSM)
+  Lanzar error            RAISE EXCEPTION          SIGNAL SQLSTATE '45000'
+  Variable de sesion      set_config /             variable de usuario
+  (candado de saldo)      current_setting          @caja_ledger
+  Comparacion null-safe   IS DISTINCT FROM         NOT (a <=> b)
+  Restar fechas (mora)    fecha1 - fecha2          DATEDIFF(fecha1,fecha2)
+  Roles / permisos        CREATE ROLE / GRANT      CREATE ROLE + usuarios
+
+Detalles importantes de la traduccion:
+
+  * En PostgreSQL una sola funcion podia dispararse en INSERT y en
+    UPDATE. En MariaDB un trigger es para UN evento, asi que las
+    reglas de socios y prestamos se escribieron como dos triggers
+    (uno BEFORE INSERT y otro BEFORE UPDATE) con la misma logica.
+
+  * La funcion que valida beneficiarios se reescribio como un
+    PROCEDIMIENTO (sp_validar_beneficiarios) al que llaman los
+    tres triggers de la tabla (alta, cambio y baja).
+
+  * El "candado" que impide tocar el saldo a mano usa una variable
+    de sesion @caja_ledger: el trigger de transacciones la enciende
+    mientras ajusta el saldo y la apaga al terminar; el trigger
+    proteger_saldo bloquea cualquier UPDATE al saldo cuando esa
+    variable no esta encendida.
+
+  * ORDEN CRITICO (igual que en PostgreSQL): los triggers de REGLAS
+    se crean ANTES de cargar los datos (para que validen la carga),
+    y los triggers de MOVIMIENTO (aplicar_transaccion y
+    proteger_saldo) se crean DESPUES de los datos, para que los
+    saldos de prueba NO se recalculen. Todo esto ya viene en el
+    orden correcto dentro de 2_Estructura_y_Datos.sql.
+
+
+===============================================================
+VERIFICACION
+===============================================================
+
+Dentro de "sudo mariadb BD_Jesdreel_Daniel_Mata_Gomez" ejecutar:
+
+    SELECT 'Sucursales' AS tabla, COUNT(*) AS n FROM sucursales
+    UNION ALL SELECT 'Empleados',       COUNT(*) FROM empleados
+    UNION ALL SELECT 'Socios',          COUNT(*) FROM socios
+    UNION ALL SELECT 'Documentos',      COUNT(*) FROM documentos_socio
+    UNION ALL SELECT 'Beneficiarios',   COUNT(*) FROM beneficiarios
+    UNION ALL SELECT 'Cuentas ahorro',  COUNT(*) FROM cuentas_ahorro
+    UNION ALL SELECT 'Prestamos',       COUNT(*) FROM prestamos
+    UNION ALL SELECT 'Transacciones',   COUNT(*) FROM transacciones
+    UNION ALL SELECT 'Abonos prestamo', COUNT(*) FROM abonos_prestamo;
+
+    Debe mostrar: 6, 14, 30, 240, 52, 30, 18, 80, 15.
+
+Ver que los triggers y vistas existen:
+
+    SELECT COUNT(*) FROM information_schema.triggers
+     WHERE trigger_schema = 'BD_Jesdreel_Daniel_Mata_Gomez';   -- 9
+    SHOW FULL TABLES WHERE table_type = 'VIEW';                 -- 3 vistas
+
+
+===============================================================
+DEMOSTRACION: LAS RESTRICCIONES RECHAZAN LO INVALIDO
+===============================================================
+
+Cada una de estas instrucciones DEBE fallar con un mensaje de error.
+Es la prueba de que las reglas de negocio quedaron activas.
+
+  -- Socio menor de 19 anios  (trigger)
+  INSERT INTO socios (nombre,apellidos,fecha_nacimiento,curp,rfc,sucursal_id,aporte_inicial)
+  VALUES ('Nino','Test','2015-01-01','TEST010101HJCRRN01','TEST010101AB1',1,3000);
+
+  -- Aporte inicial menor a 3000  (CHECK / trigger)
+  INSERT INTO socios (nombre,apellidos,fecha_nacimiento,curp,rfc,sucursal_id,aporte_inicial)
+  VALUES ('Pobre','Test','1980-01-01','POBT800101HJCRRN02','POBT800101AB2',1,1000);
+
+  -- CURP con formato invalido  (CHECK regex + largo)
+  INSERT INTO socios (nombre,apellidos,fecha_nacimiento,curp,rfc,sucursal_id,aporte_inicial)
+  VALUES ('Mala','Curp','1980-01-01','CURP_INVALIDA','MALC800101AB3',1,3000);
+
+  -- Tercer prestamo activo del socio 1  (trigger: maximo 2)
+  INSERT INTO prestamos (socio_id,monto_original,saldo_pendiente,estado)
+  VALUES (1,1000,1000,'solicitado'), (1,1000,1000,'solicitado');
+
+  -- Prestamo mayor a 2 veces el saldo (socio 6)  (trigger)
+  INSERT INTO prestamos (socio_id,monto_original,saldo_pendiente,estado)
+  VALUES (6,20000,20000,'solicitado');
+
+  -- Modificar el saldo a mano  (trigger proteger_saldo)
+  UPDATE cuentas_ahorro SET saldo = 999999 WHERE id = 1;
+
+  -- Retiro sin fondos suficientes  (trigger)
+  INSERT INTO transacciones (cuenta_id,tipo,monto,metodo_pago)
+  VALUES (22,'retiro',99999,'EFECTIVO');
+
+Y esta operacion VALIDA si debe funcionar (el saldo sube por trigger):
+
+  SELECT saldo FROM cuentas_ahorro WHERE id = 2;          -- 8500.00
+  INSERT INTO transacciones (cuenta_id,tipo,monto,metodo_pago)
+  VALUES (2,'deposito',500,'SPEI');
+  SELECT saldo FROM cuentas_ahorro WHERE id = 2;          -- 9000.00
+
+  (Para dejar la base limpia despues de la demo, volver a correr
+   run_all.sh o los 3 scripts en orden.)

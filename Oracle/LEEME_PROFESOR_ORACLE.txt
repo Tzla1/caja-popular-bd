@@ -1,0 +1,239 @@
+PROYECTO FINAL - BASE DE DATOS
+Caja Popular  -  MIGRACION A ORACLE
+Alumno: Jesdreel Daniel Mata Gomez
+Materia: Base de Datos
+
+Esta es la MISMA base "Caja Popular" del entregable de PostgreSQL,
+traducida al dialecto de Oracle (PL/SQL). Se conservan TODAS las
+reglas de negocio: restricciones CHECK con expresiones regulares,
+triggers, vistas, roles y los datos de prueba. Los conteos coinciden
+fila por fila con la version PostgreSQL/MariaDB y cada restriccion
+rechaza los datos invalidos igual que en el original.
+
+Motor probado: Oracle Database 23ai Free, dentro de un contenedor
+Docker (no requiere instalar Oracle en el equipo).
+
+NOTA IMPORTANTE SOBRE ORACLE:
+En Oracle no existe el concepto de "crear una base de datos" como en
+PostgreSQL o MySQL. El contenedor logico de las tablas es el SCHEMA
+de un USUARIO. Por eso aqui se crea un usuario llamado CAJA, y ese
+usuario ES la base de datos de la Caja Popular.
+
+
+===============================================================
+CONTENIDO DE ESTA CARPETA  (se ejecutan en este orden)
+===============================================================
+
+0_Crear_Usuario.sql
+    Crea el usuario/schema CAJA y le da permisos. Se corre como
+    SYSTEM (el administrador de Oracle).
+
+1_Estructura.sql
+    Las 11 tablas con todas sus restricciones, comentarios e
+    indices. Se corre como CAJA.
+
+2_Logica_Reglas.sql
+    El paquete pkg_caja, los triggers de REGLAS y las 3 vistas.
+    Se corre como CAJA. Se crea ANTES de los datos.
+
+3_Datos.sql
+    Los datos de prueba (un INSERT por fila). Se corre como CAJA.
+
+4_Logica_Movimiento.sql
+    Los triggers de MOVIMIENTO (ajustan saldos). Se crean DESPUES
+    de los datos, para no recalcular los saldos de prueba.
+
+5_Roles_Permisos.sql
+    Roles rol_caja y rol_consulta, y usuarios usuario1/usuario2
+    con contrasena (equivale al "blindaje" de PostgreSQL). Se
+    corre como SYSTEM.
+
+run_all.sh
+    Levanta el contenedor Oracle y ejecuta los 6 scripts en orden.
+    Un solo comando.
+
+
+===============================================================
+INSTALACION RAPIDA (con Docker)
+===============================================================
+
+Requisito: tener Docker instalado.
+
+Opcion A - todo de una vez:
+
+    cd Oracle
+    ./run_all.sh
+
+    (La primera vez descarga la imagen de Oracle, ~2 GB, y tarda
+     un par de minutos en arrancar. Las siguientes veces es rapido.)
+
+Opcion B - paso a paso (para explicarlo en el pizarron):
+
+    1. Levantar Oracle:
+       docker run -d --name oracle-caja -p 1521:1521 \
+         -e ORACLE_PASSWORD=Oracle_2026 \
+         gvenzl/oracle-free:slim-faststart
+
+       Esperar a que en "docker logs oracle-caja" aparezca:
+       "DATABASE IS READY TO USE!"
+
+    2. Copiar los scripts al contenedor:
+       docker cp . oracle-caja:/tmp/orasql
+
+    3. Crear el usuario CAJA (como SYSTEM):
+       docker exec -it oracle-caja sqlplus \
+         system/Oracle_2026@localhost:1521/FREEPDB1 \
+         @/tmp/orasql/0_Crear_Usuario.sql
+
+    4. Cargar estructura, reglas, datos y movimiento (como CAJA):
+       docker exec -it oracle-caja sqlplus \
+         caja/Caja_2026@localhost:1521/FREEPDB1 \
+         @/tmp/orasql/1_Estructura.sql
+
+       (repetir el mismo comando cambiando el archivo por
+        2_Logica_Reglas.sql, luego 3_Datos.sql, luego
+        4_Logica_Movimiento.sql)
+
+    5. Crear roles y usuarios (como SYSTEM):
+       docker exec -it oracle-caja sqlplus \
+         system/Oracle_2026@localhost:1521/FREEPDB1 \
+         @/tmp/orasql/5_Roles_Permisos.sql
+
+    Entrar a consultar:
+       docker exec -it oracle-caja sqlplus \
+         caja/Caja_2026@localhost:1521/FREEPDB1
+
+
+CONEXION DESDE SQL DEVELOPER (opcional, interfaz grafica):
+    Host: localhost   Puerto: 1521   Service name: FREEPDB1
+    Usuario: caja      Contrasena: Caja_2026
+
+
+===============================================================
+QUE CAMBIO RESPECTO A PostgreSQL  (y por que)
+===============================================================
+
+Oracle es el motor mas distinto de los tres. La logica de negocio
+es identica; cambia la forma de escribirla y hubo que resolver dos
+particularidades propias de Oracle (ver mas abajo).
+
+  ELEMENTO                POSTGRESQL              ORACLE
+  ----------------------  ----------------------  ------------------------
+  "Base de datos"         CREATE DATABASE         Usuario/Schema (CAJA)
+  Autoincremento          GENERATED ALWAYS        GENERATED ALWAYS
+                          AS IDENTITY             AS IDENTITY (igual)
+  Booleano                BOOLEAN                  NUMBER(1) + CHECK IN(0,1)
+  Texto largo             TEXT                     CLOB
+  Cadena                  VARCHAR                  VARCHAR2
+  Decimal                 NUMERIC(12,2)            NUMBER(12,2)
+  Fecha por defecto       DEFAULT CURRENT_DATE     DEFAULT TRUNC(SYSDATE)
+  Marca de tiempo         CURRENT_TIMESTAMP        SYSTIMESTAMP
+  CHECK con regex         columna ~ 'patron'       REGEXP_LIKE(col,'patron')
+  Lanzar error            RAISE EXCEPTION          RAISE_APPLICATION_ERROR
+                                                   (-20001,'mensaje')
+  Variable de sesion      set_config /             variable de PAQUETE
+  (candado de saldo)      current_setting          pkg_caja.g_ledger
+  :NEW / :OLD             NEW / OLD                :NEW / :OLD (con dos puntos)
+  Restar fechas (mora)    fecha1 - fecha2          fecha1 - fecha2 (da dias)
+  Roles / permisos        CREATE ROLE / GRANT      CREATE ROLE + grants
+                                                   por tabla
+
+DOS PROBLEMAS PROPIOS DE ORACLE QUE HUBO QUE RESOLVER:
+
+  1) TABLA MUTANTE (error ORA-04091)
+     En Oracle un trigger "por fila" NO puede leer ni modificar la
+     MISMA tabla que lo dispara. Dos reglas necesitaban hacerlo:
+        - "maximo 2 prestamos activos" (cuenta prestamos mientras
+          inserta en prestamos)
+        - "maximo 4 beneficiarios y suma <= 100" (cuenta beneficiarios
+          mientras inserta en beneficiarios)
+     Solucion: se escribieron como COMPOUND TRIGGER, que acumula los
+     socios afectados fila por fila y valida al final del statement,
+     sin caer en el error de tabla mutante. Por eso Oracle muestra 5
+     triggers en lugar de 9: los mismos 7 disparos de reglas quedan
+     agrupados en 2 compound triggers. La logica es identica.
+
+  2) INSERT ALL con columnas IDENTITY
+     El primer intento uso INSERT ALL (varias filas en un statement),
+     pero Oracle le asigna el MISMO id autogenerado a todas las filas
+     y truena por clave duplicada. Solucion: los datos se cargan con
+     UN INSERT por fila, asi cada fila obtiene su id correcto.
+
+  3) CONSTRUCTOR DE VALORES Y ORDEN (igual que en PostgreSQL)
+     - El "SELECT ... FROM (lista de valores)" se reescribio con
+       UNION ALL SELECT ... FROM dual (Oracle siempre necesita FROM).
+     - Los triggers de REGLAS se crean ANTES de los datos y los de
+       MOVIMIENTO DESPUES, para no recalcular los saldos de prueba.
+
+
+===============================================================
+VERIFICACION
+===============================================================
+
+Dentro de sqlplus como usuario CAJA, ejecutar:
+
+    SELECT 'Sucursales' AS tabla, COUNT(*) AS n FROM sucursales
+    UNION ALL SELECT 'Empleados',       COUNT(*) FROM empleados
+    UNION ALL SELECT 'Socios',          COUNT(*) FROM socios
+    UNION ALL SELECT 'Documentos',      COUNT(*) FROM documentos_socio
+    UNION ALL SELECT 'Beneficiarios',   COUNT(*) FROM beneficiarios
+    UNION ALL SELECT 'Cuentas ahorro',  COUNT(*) FROM cuentas_ahorro
+    UNION ALL SELECT 'Prestamos',       COUNT(*) FROM prestamos
+    UNION ALL SELECT 'Transacciones',   COUNT(*) FROM transacciones
+    UNION ALL SELECT 'Abonos prestamo', COUNT(*) FROM abonos_prestamo;
+
+    Debe mostrar: 6, 14, 30, 240, 52, 30, 18, 80, 15.
+
+Ver triggers y vistas:
+
+    SELECT COUNT(*) FROM user_triggers;   -- 5 (7 reglas en 2 compound)
+    SELECT COUNT(*) FROM user_views;      -- 3
+
+
+===============================================================
+DEMOSTRACION: LAS RESTRICCIONES RECHAZAN LO INVALIDO
+===============================================================
+
+Antes de correr fechas, fijar el formato:
+    ALTER SESSION SET NLS_DATE_FORMAT = 'YYYY-MM-DD';
+
+Cada una de estas instrucciones DEBE fallar con un ORA-xxxxx.
+
+  -- Socio menor de 19 anios  (trigger, ORA-20001)
+  INSERT INTO socios (nombre,apellidos,fecha_nacimiento,curp,rfc,sucursal_id,aporte_inicial)
+  VALUES ('Nino','Test',DATE '2015-01-01','TEST010101HJCRRN01','TEST010101AB1',1,3000);
+
+  -- Aporte inicial menor a 3000  (trigger, ORA-20002)
+  INSERT INTO socios (nombre,apellidos,fecha_nacimiento,curp,rfc,sucursal_id,aporte_inicial)
+  VALUES ('Pobre','Test',DATE '1980-01-01','POBT800101HJCRRN02','POBT800101AB2',1,1000);
+
+  -- CURP con formato invalido  (CHECK, ORA-02290)
+  INSERT INTO socios (nombre,apellidos,fecha_nacimiento,curp,rfc,sucursal_id,aporte_inicial)
+  VALUES ('Mala','Curp',DATE '1980-01-01','CURP_INVALIDA','MALC800101AB3',1,3000);
+
+  -- Tercer prestamo activo del socio 1  (trigger, ORA-20012)
+  INSERT INTO prestamos (socio_id,monto_original,saldo_pendiente,estado)
+  VALUES (1,1000,1000,'solicitado');
+  INSERT INTO prestamos (socio_id,monto_original,saldo_pendiente,estado)
+  VALUES (1,1000,1000,'solicitado');
+
+  -- Prestamo mayor a 2 veces el saldo (socio 6)  (trigger, ORA-20011)
+  INSERT INTO prestamos (socio_id,monto_original,saldo_pendiente,estado)
+  VALUES (6,20000,20000,'solicitado');
+
+  -- Modificar el saldo a mano  (trigger, ORA-20040)
+  UPDATE cuentas_ahorro SET saldo = 999999 WHERE id = 1;
+
+  -- Retiro sin fondos suficientes  (trigger, ORA-20033)
+  INSERT INTO transacciones (cuenta_id,tipo,monto,metodo_pago)
+  VALUES (22,'retiro',99999,'EFECTIVO');
+
+Operacion VALIDA (el saldo sube por trigger):
+
+  SELECT saldo FROM cuentas_ahorro WHERE id = 2;          -- 8500
+  INSERT INTO transacciones (cuenta_id,tipo,monto,metodo_pago)
+  VALUES (2,'deposito',500,'SPEI');
+  SELECT saldo FROM cuentas_ahorro WHERE id = 2;          -- 9000
+
+  Para NO guardar los cambios de la demostracion, terminar con:
+       ROLLBACK;
